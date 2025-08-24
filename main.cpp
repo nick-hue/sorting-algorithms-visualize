@@ -20,7 +20,7 @@ int main(){
     int num_elements = 50;
     int max_value = 100;
     std::vector<int> numbers = getRandomNumbers(num_elements, max_value);
-    std::string algorithm = "quick"; 
+    std::string algorithm = "bubble"; 
 
     // Define a function pointer type for sorting functions
     using SortFunc = void(*)(std::vector<int>&, std::function<void(const std::vector<int>&)>);
