@@ -23,7 +23,8 @@
 #define STARTING_LINE_POS 100
 
 // Callback type for visualization
-using VisualizeStepCallback = std::function<void(const std::vector<int>&)>;
+using VisualizeStepCallback = std::function<void(const std::vector<int>&, bool)>;
+using SortFunc = std::function<void(std::vector<int>&, std::function<void(const std::vector<int>&)>)>;
 
 int CalculateYPlacement(int number_value, int max_value){
     int final_pos;
@@ -35,7 +36,7 @@ int CalculateYPlacement(int number_value, int max_value){
     int down_displacement = (1-perc) * MAX_LINE_HEIGHT;
 
     final_pos = STARTING_LINE_POS + down_displacement;
-    printf("Final pos: %d\n", final_pos);
+    // printf("Final pos: %d\n", final_pos);
     return final_pos;
 }
 
@@ -102,7 +103,7 @@ void AnimateEnd(std::vector<int> list, int lineWidth, int max_value, Color lineC
 }
 
 // Updated visualize function to accept a callback
-void visualize(void(*sortFunc)(std::vector<int>&, VisualizeStepCallback), std::string algorithm, std::vector<int> list, int max_value){
+void visualize(SortFunc sortFunc, std::string algorithm, std::vector<int> list, int max_value){
     
     printf("Visualizing algorithm for: %s\n", algorithm.c_str());
     std::string title = algorithm + " Simulation";
@@ -111,7 +112,14 @@ void visualize(void(*sortFunc)(std::vector<int>&, VisualizeStepCallback), std::s
     SetTargetFPS(60);     
 
     InitAudioDevice();      // Initialize audio device
-    Sound fxWav = LoadSound("resources/boop.wav");         // Load WAV audio file
+
+    // Load multiple sound instances for overlapping playback
+    const int NUM_SOUNDS = 8;
+    Sound fxWav[NUM_SOUNDS];
+    for (int i = 0; i < NUM_SOUNDS; ++i) {
+        fxWav[i] = LoadSound("resources/boop.wav");
+    }
+    int soundIndex = 0;
     SetMasterVolume(0.2f);                             // Set master volume (listener)
 
     // WAVE TEST
@@ -135,7 +143,7 @@ void visualize(void(*sortFunc)(std::vector<int>&, VisualizeStepCallback), std::s
     bool paused = false;
 
     // Visualization callback
-    auto stepCallback = [&](const std::vector<int>& state) {
+    auto stepCallback = [&](const std::vector<int>& state, bool swapped) {
         currentList = state;
         CheckSpeed(waitTime);
 
@@ -152,41 +160,38 @@ void visualize(void(*sortFunc)(std::vector<int>&, VisualizeStepCallback), std::s
         }
 
         BeginDrawing();
+            if (swapped) {
+                PlaySound(fxWav[soundIndex]);
+                soundIndex = (soundIndex + 1) % NUM_SOUNDS;
+            }
             ClearBackground(BLACK);
             DrawMainFrame(currentList, lineWidth, max_value, WHITE);
             DrawDebugFrame(lineWidth, waitTime);
-            // if (IsSoundPlaying(beepPool[beepIdx])) {
-            //     StopSound(beepPool[beepIdx]);  // comment this out if you prefer true overlap even if it clips
-            // }
-            // PlaySound(beepPool[beepIdx]);
-            // beepIdx = (beepIdx + 1) % SND_POOL;
         EndDrawing();
-        PlaySound(fxWav);  // Play sound on each step
 
         WaitTime(waitTime);
     };
 
     // Run the sorting algorithm with visualization
-    sortFunc(currentList, stepCallback);
+    sortFunc(currentList, [&](const std::vector<int>& state){ stepCallback(state, true); });
     sortingDone = true;
 
     // Show the final sorted state until window is closed
     int colored_index = 0;
-    while (!WindowShouldClose())
-    {
+    while (!WindowShouldClose()) {
         BeginDrawing();
             ClearBackground(BLACK);
-            // DrawMainFrame(currentList, lineWidth, max_value, GREEN);
             AnimateEnd(currentList, lineWidth, max_value, WHITE, GREEN, colored_index);
             DrawDebugFrame(lineWidth, waitTime);
-            PlaySound(fxWav);  // Play sound on completion
         EndDrawing();
         colored_index++;
     }
 
     // for (auto& s : beepPool) UnloadSound(s);
-    
-    UnloadSound(fxWav);     
-    CloseAudioDevice();    
+    // UnloadSound(fxWav);     
+    for (int i = 0; i < NUM_SOUNDS; ++i) {
+        UnloadSound(fxWav[i]);
+    }
+    CloseAudioDevice();
     CloseWindow();
 }

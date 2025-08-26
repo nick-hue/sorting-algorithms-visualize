@@ -10,19 +10,24 @@
 
 int main(){
 
-    int num_elements = 50;
+    int num_elements = 20;
     int max_value = 100;
     std::vector<int> numbers = getRandomNumbers(num_elements, max_value);
-    std::string algorithm = "bubble"; 
+    std::string algorithm = "quick"; 
 
-    // Define a function pointer type for sorting functions
-    using SortFunc = void(*)(std::vector<int>&, std::function<void(const std::vector<int>&)>);
-    SortFunc func = nullptr;
+    // Instead of using a function pointer, use std::function for sortFunc to allow lambdas
+    using VisualizeStepCallback = std::function<void(const std::vector<int>&, bool)>;
+    using SortFunc = std::function<void(std::vector<int>&, std::function<void(const std::vector<int>&)>)>;
+    SortFunc func;
 
     if (algorithm == "bubble") {
-        func = bubble_sort;
+        func = [](std::vector<int>& arr, std::function<void(const std::vector<int>&)> cb) {
+            bubble_sort(arr, [&](const std::vector<int>& state, bool) { cb(state); });
+        };
     } else if (algorithm == "quick") {
-        func = quick_sort;
+        func = [](std::vector<int>& arr, std::function<void(const std::vector<int>&)> cb) {
+            quick_sort(arr, [&](const std::vector<int>& state, bool) { cb(state); });
+        };
     } else {
         std::cerr << "Unknown algorithm: " << algorithm << std::endl;
         return 1;
