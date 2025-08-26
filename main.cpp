@@ -1,19 +1,12 @@
 #include "visualizer.h"
 #include "sorting.h"
+#include "my_util.h"
 #include <vector>
 #include <string>
 #include <iostream>
 #include <algorithm>
 #include <ctime>
 #include <functional>
-
-std::vector<int> getRandomNumbers(int num, int max_value){
-    std::srand(unsigned(std::time(nullptr)));
-    std::vector<int> numbers(num);
-    std::generate(numbers.begin(), numbers.end(), [max_value]() { return 1 + std::rand() % max_value; });
-
-    return numbers;
-}
 
 int main(){
 
@@ -24,7 +17,6 @@ int main(){
 
     // Define a function pointer type for sorting functions
     using SortFunc = void(*)(std::vector<int>&, std::function<void(const std::vector<int>&)>);
-
     SortFunc func = nullptr;
 
     if (algorithm == "bubble") {

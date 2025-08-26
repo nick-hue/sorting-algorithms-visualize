@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++17
 LDFLAGS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
-SRC = main.cpp visualizer.cpp sorting.cpp
+SRC = main.cpp visualizer.cpp sorting.cpp my_util.cpp
 BIN = app
 
 all: $(BIN)
